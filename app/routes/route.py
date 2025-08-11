@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi import status
 from typing import Optional
 
-from app.agent.prompts import intent_prompt
+from app.agent.prompts import intent_prompt, sys_info_prompt
 from app.agent.schema import DiagnoseRequest, DiagnoseResponse, DiagnosisOutput
 from app.agent.agents import custom_agent
 from app.utils import util as session
@@ -50,10 +50,35 @@ def _previous_commands(session_id: str) -> list[str]:
     return cmds[-10:]
 
 
+def _last_command(session_id: str) -> Optional[str]:
+    for entry in reversed(session.get_history(session_id)):
+        if entry.command:
+            return entry.command
+    return None
+
+
 @router.post("/diagnose", response_model=DiagnoseResponse, status_code=status.HTTP_200_OK)
 def diagnose(payload: DiagnoseRequest) -> DiagnoseResponse:
     # Resolve session
     session_id = session.get_or_create_session(payload.session_id)
+    print(f"🔧 Session ID: {session_id}")
+
+    # Persist the current user input BEFORE building the prompt so the agent sees it in history
+    if payload.command_output:
+        last_cmd = _last_command(session_id)
+        session.append_history(
+            session_id=session_id,
+            message=(f"User: output for '{last_cmd}'" if last_cmd else "User: command output"),
+            command=None,
+            command_output=payload.command_output,  # store full output
+        )
+    else:
+        session.append_history(
+            session_id=session_id,
+            message=f"User: {payload.problem}",
+            command=None,
+            command_output=None,
+        )
 
     # Prepare sections
     history_section = _render_history_section(session_id)
@@ -65,14 +90,16 @@ def diagnose(payload: DiagnoseRequest) -> DiagnoseResponse:
     )
 
     # Build system prompt
-    system_prompt = intent_prompt.format(
+    system_prompt = sys_info_prompt.format(
         problem=payload.problem,
         history_section=history_section,
         command_output_section=command_output_section,
     )
+    with open("system_prompt.txt", "w") as f:
+        f.write(system_prompt)
     prev_cmds = _previous_commands(session_id)
-    if prev_cmds:
-        system_prompt += "\n\nPreviously suggested commands (do not repeat unless new output requires it):\n- " + "\n- ".join(prev_cmds)
+    # if prev_cmds:
+    #     system_prompt += "\n\nPreviously suggested commands (do not repeat unless new output requires it):\n- " + "\n- ".join(prev_cmds)
 
     # Call the agent with structured output
     try:
@@ -81,6 +108,7 @@ def diagnose(payload: DiagnoseRequest) -> DiagnoseResponse:
             user_query=payload.problem,
             response_model=DiagnosisOutput,
         )
+        print(f"🔧 AI output: {ai_output}")
     except Exception as e:
         # Graceful fallback
         ai_output = DiagnosisOutput(
@@ -102,15 +130,7 @@ def diagnose(payload: DiagnoseRequest) -> DiagnoseResponse:
             next_step="message",
         )
 
-    # Persist interaction
-    # 1) User problem
-    session.append_history(
-        session_id=session_id,
-        message=f"User: {payload.problem}",
-        command=None,
-        command_output=short_co,
-    )
-    # 2) AI response
+    # Persist AI response
     session.append_history(
         session_id=session_id,
         message=f"Assistant: {ai_output.message}",

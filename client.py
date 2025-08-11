@@ -142,7 +142,7 @@ def main():
                 print(f"📋 Session: {session_id} | Steps: {history_count}")
             
             # Handle next steps
-            if result.get('next_step') == 'command' and result.get('command'):
+            if result.get('next_step') == 'command' or result.get('command'):
                 command = result['command']
                 print(f"\n🔧 Suggested command: {command}")
                 
@@ -155,7 +155,11 @@ def main():
                 elif choice in ['y', 'yes']:
                     # Execute the command
                     cmd_result = run_command(command)
-                    
+                    print(f"🔧 Command result: {cmd_result}")
+
+                    # trim the output to 1000 characters
+                    cmd_result['output'] = cmd_result['output'][:1000]
+
                     # Prepare output for next API call
                     if cmd_result['success']:
                         command_output = cmd_result['output']
