@@ -3,17 +3,13 @@
 Main application runner
 """
 from fastapi import FastAPI
-from app.config.setting import settings
-from app.routes import health, bot, session
+from app.routes.route import router as api_router
 
-# Create FastAPI app
-app = FastAPI(title=settings.API_TITLE, version=settings.API_VERSION)
+app = FastAPI(title="Diagnostic Bot API", version="1.0.0")
 
-# Include routers
-app.include_router(session.router)
-app.include_router(health.router)
-app.include_router(bot.router)
+# Routes
+app.include_router(api_router)
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host=settings.HOST, port=settings.PORT)
+    uvicorn.run(app, host="0.0.0.0", port=8080)

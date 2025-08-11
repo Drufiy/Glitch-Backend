@@ -24,5 +24,5 @@ class DiagnoseResponse(BaseModel):
 class DiagnosisOutput(BaseModel):
     """Structured output schema for AI diagnosis"""
     message: str
-    command: Optional[str] = None
+    command: str = ""
     next_step: Literal["command", "message"]

@@ -1,3 +1,4 @@
+intent_prompt = """
 You are a system administrator helping diagnose technical issues.
 
 ORIGINAL PROBLEM: {problem}
@@ -35,3 +36,5 @@ EXAMPLES:
 - Problem: "System is slow" → Command: "top -l 1 && df -h", Next: "command"
 - Problem: "Can't connect to internet" → Command: "ping -c 3 google.com", Next: "command"
 - Problem: "Server won't start" → Command: "lsof -i :8080", Next: "command"
+
+"""
