@@ -28,26 +28,22 @@ GOAL:
 Quickly identify the root cause of Windows system problems while minimizing unnecessary steps and keeping user effort low. Always follow the user’s lead and address exactly what they ask for—no extra actions unless explicitly requested.
 
 
-user problem: can you clsoe the fiefox app
+user problem: fire fox is runnig can you kill it 
 
 
-chat history: [2025-08-11T22:41:47.405307] message: User: can you clsoe the fiefox app
-[2025-08-11T22:41:49.213897] message: Assistant: I can help close the Firefox application. First, I need to identify the process. Could you please run the following command in the Command Prompt and share the output?
-
-`tasklist | findstr /i "firefox"` | command: tasklist | findstr /i "firefox"
-[2025-08-11T22:41:52.303051] message: User: output for 'tasklist | findstr /i "firefox"' | output: firefox.exe                  23504 Console                    1   2,98,924 K
-firefox.exe                  21132 Console                    1     93,796 K
-firefox.exe                  21972 Console                    1      9,132 K
-firefox.exe                  11232 Console                    1     95,564 K
-firefox.exe                  22332 Console                    1      8,984 K
-firefox.exe                  21080 Console                    1   3,16,792 K
-firefox.exe                   6316 Con... (truncated)
-[2025-08-11T22:41:53.386277] message: Assistant: Thank you for the output. Now, to close all instances of Firefox, I will use the taskkill command. Please run the following command: | command: taskkill /f /im firefox.exe
-[2025-08-11T22:41:58.359113] message: User: output for 'taskkill /f /im firefox.exe' | output: SUCCESS: The process "firefox.exe" with PID 23504 has been terminated.
-SUCCESS: The process "firefox.exe" with PID 21132 has been terminated.
-SUCCESS: The process "firefox.exe" with PID 21972 has been terminated.
-SUCCESS: The process "firefox.exe" with PID 11232 has been terminated.
-SUCCESS: The process "firefox.exe" with PID 22332 has been terminated.
-SUCCESS: The process "firefox.exe" with PID 21080 has been terminated.
-SUCCESS: The process "firefox.exe" with PID 6316 has been terminated.
-SUCC... (truncated)
+chat history: [2025-08-16T18:46:37.058235] message: User: output for 'tasklist /v /fo csv' | output: "Image Name","PID","Session Name","Session#","Mem Usage","Status","User Name","CPU Time","Window Title"
+"System Idle Process","0","Services","0","8 K","Unknown","NT AUTHORITY\SYSTEM","11:03:07","N/A"
+"System","4","Services","0","4,632 K","Unknown","N/A","0:48:11","N/A"
+"Secure System","88","Services","0","23,576 K","Unknown","NT AUTHORITY\SYSTEM","0:00:00","N/A"
+"Registry","156","Services","0","61,244 K","Unknown","NT AUTHORITY\SYSTEM","0:00:02","N/A"
+"smss.exe","572","Services","0","880 K"... (truncated)
+[2025-08-16T18:46:39.334020] message: Assistant: Based on the output, the 'System Idle Process' is using the most CPU time, which is normal. The other processes are using very little CPU time. To further investigate if there are any processes using high CPU, please run the following command: | command: tasklist /v /fo csv
+[2025-08-16T18:47:04.973610] message: User: fire fox is runnig can you kill it 
+[2025-08-16T18:47:06.265898] message: Assistant: To kill Firefox, I will use the taskkill command. Please run the following command: | command: taskkill /f /im firefox.exe
+[2025-08-16T18:47:10.317769] message: User: output for 'taskkill /f /im firefox.exe' | output: SUCCESS: The process "firefox.exe" with PID 10620 has been terminated.
+SUCCESS: The process "firefox.exe" with PID 3740 has been terminated.
+SUCCESS: The process "firefox.exe" with PID 14732 has been terminated.
+SUCCESS: The process "firefox.exe" with PID 3184 has been terminated.
+SUCCESS: The process "firefox.exe" with PID 6968 has been terminated.
+SUCCESS: The process "firefox.exe" with PID 20640 has been terminated.
+SUCCESS: The process "firefox.exe" with PID 20972 has been terminated.... (truncated)
