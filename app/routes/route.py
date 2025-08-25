@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi import status
 from typing import Optional
 
-from app.agent.prompts import intent_prompt, sys_info_prompt
+from app.agent.prompts import sys_info_prompt
 from app.agent.schema import DiagnoseRequest, DiagnoseResponse, DiagnosisOutput
 from app.agent.agents import custom_agent
 from app.utils import util as session
@@ -26,20 +26,9 @@ def _render_history_section(session_id: str) -> str:
         if entry.command:
             line += f" | command: {entry.command}"
         if entry.command_output:
-            trimmed = entry.command_output
-            if len(trimmed) > 500:
-                trimmed = trimmed[:500] + "... (truncated)"
-            line += f" | output: {trimmed}"
+            line += f" | output: {entry.command_output}"
         lines.append(line)
     return "\n".join(lines)
-
-
-def _shorten_text(text: str, max_chars: int = 1000) -> str:
-    if not text or len(text) <= max_chars:
-        return text
-    head = max_chars // 2
-    tail = max_chars - head
-    return text[:head] + f"\n... (truncated {len(text) - max_chars} chars) ...\n" + text[-tail:]
 
 
 def _previous_commands(session_id: str) -> list[str]:
@@ -82,10 +71,9 @@ def diagnose(payload: DiagnoseRequest) -> DiagnoseResponse:
 
     # Prepare sections
     history_section = _render_history_section(session_id)
-    short_co = _shorten_text(payload.command_output, 1000) if payload.command_output else None
     command_output_section = (
-        f"Latest command output provided by user (may be empty):\n{short_co}"
-        if short_co
+        f"Latest command output provided by user (may be empty):\n{payload.command_output}"
+        if payload.command_output
         else "No command output provided yet."
     )
 
@@ -95,8 +83,8 @@ def diagnose(payload: DiagnoseRequest) -> DiagnoseResponse:
         history_section=history_section,
         command_output_section=command_output_section,
     )
-    with open("system_prompt.txt", "w",encoding="utf-8") as f:
-        f.write(system_prompt)
+    # with open("system_prompt.txt", "w",encoding="utf-8") as f:
+    #     f.write(system_prompt)
     prev_cmds = _previous_commands(session_id)
     # if prev_cmds:
     #     system_prompt += "\n\nPreviously suggested commands (do not repeat unless new output requires it):\n- " + "\n- ".join(prev_cmds)
@@ -119,17 +107,17 @@ def diagnose(payload: DiagnoseRequest) -> DiagnoseResponse:
             command="",
             next_step="message",
         )
+        
 
-    # If model repeats a previous command without new output, stop the loop and ask user to run it
-    if ai_output.next_step == "command" and ai_output.command and ai_output.command in prev_cmds and not payload.command_output:
-        ai_output = DiagnosisOutput(
-            message=(
-                f"You still need to run the previously suggested command and share its output: {prev_cmds[-1]}"
-            ),
-            command="",
-            next_step="message",
-        )
-
+    # # If model repeats a previous command without new output, stop the loop and ask user to run it
+    # if ai_output.next_step == "command" and ai_output.command and ai_output.command in prev_cmds and not payload.command_output:
+    #     ai_output = DiagnosisOutput(
+    #         message=(
+    #             f"You still need to run the previously suggested command and share its output: {prev_cmds[-1]}"
+    #         ),
+    #         command="",
+    #         next_step="message",
+    #     )
     # Persist AI response
     session.append_history(
         session_id=session_id,

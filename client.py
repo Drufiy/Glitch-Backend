@@ -157,9 +157,6 @@ def main():
                     cmd_result = run_command(command)
                     print(f"🔧 Command result: {cmd_result}")
 
-                    # trim the output to 1000 characters
-                    cmd_result['output'] = cmd_result['output'][:1000]
-
                     # Prepare output for next API call
                     if cmd_result['success']:
                         command_output = cmd_result['output']
