@@ -95,7 +95,7 @@ def diagnose(payload: DiagnoseRequest) -> DiagnoseResponse:
         history_section=history_section,
         command_output_section=command_output_section,
     )
-    with open("system_prompt.txt", "w") as f:
+    with open("system_prompt.txt", "w",encoding="utf-8") as f:
         f.write(system_prompt)
     prev_cmds = _previous_commands(session_id)
     # if prev_cmds:

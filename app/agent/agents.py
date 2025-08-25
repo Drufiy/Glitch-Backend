@@ -18,7 +18,7 @@ def custom_agent(
     system_prompt: str,
     user_query: str,
     response_model: Type[BaseModel],
-    model_name: str = "gemini-2.0-flash-lite",
+    model_name: str = "gemini-2.0-flash",
 ):
     """
     Sends a system prompt and user query to Gemini, parses the response with a Pydantic model.

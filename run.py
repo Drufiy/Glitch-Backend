@@ -4,10 +4,15 @@ Main application runner
 """
 from fastapi import FastAPI
 from app.routes.route import router as api_router
+from app.routes.auth import router as auth_router
 from fastapi.middleware.cors import CORSMiddleware
+from app.models import Base
+from app.database import engine
+
+# Create database tables
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Diagnostic Bot API", version="1.0.0")
-
 
 # ✅ Enable CORS
 app.add_middleware(
@@ -18,9 +23,9 @@ app.add_middleware(
     allow_headers=["*"],  # or restrict if you know exact headers
 )
 
-
 # Routes
 app.include_router(api_router)
+app.include_router(auth_router, prefix="/auth", tags=["auth"])
 
 if __name__ == "__main__":
     import uvicorn
