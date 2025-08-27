@@ -62,7 +62,7 @@ ipconfig /all                                 # Network configuration
 ### Services & Applications
 ```powershell
 Get-Service                                   # All services status
-Get-Service | Where-Object {$_.Status -eq "Stopped"}  # Stopped services
+Get-Service | Where-Object {{$_ .Status -eq "Stopped"}}  # Stopped services
 Get-StartupProgram                            # Startup programs
 ```
 
