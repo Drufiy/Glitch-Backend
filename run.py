@@ -17,7 +17,7 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(title="Diagnostic Bot API", version="1.0.0")
 
 # Initialize on/off switch state (True = ON, False = OFF)
-app.state.server_enabled = False
+app.state.server_enabled = True
 
 # ✅ Enable CORS
 app.add_middleware(
