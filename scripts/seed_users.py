@@ -24,8 +24,8 @@ def seed_users():
                 "name": "Admin User"
             },
             {
-                "email": "user1@example.com",
-                "password": "user123",  # Change this to a secure password
+                "email": "Neelesh@drufiy-demo.com",
+                "password": "Neelesh@123",  # Change this to a secure password
                 "name": "Test User 1"
             },
             # Add more users as needed
