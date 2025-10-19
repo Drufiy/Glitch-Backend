@@ -32,7 +32,7 @@ def seed_users():
                 "email": "Kshitiz@drufiy-demo.com",
                 "password": "Demo@123",  # Change this to a secure password
                 "name": "Test User 2"
-             },
+             }
         ]
 
         for user_data in users:
