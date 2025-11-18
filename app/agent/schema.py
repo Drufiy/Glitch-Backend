@@ -11,13 +11,15 @@ class HistoryEntry(BaseModel):
 class DiagnoseRequest(BaseModel):
     problem: str
     command_output: Optional[str] = None
-    session_id: Optional[str] = None
+    session_id: Optional[str] = None  # Deprecated: use thread_id instead
+    thread_id: Optional[str] = None  # Thread ID for conversation continuity
 
 class DiagnoseResponse(BaseModel):
     message: str
     command: Optional[str] = None
     next_step: Literal["command", "message"]
-    session_id: str
+    session_id: str  # Deprecated: kept for backward compatibility
+    thread_id: Optional[str] = None  # Thread ID
     history: List[HistoryEntry]
 
 # Schema for structured generation
