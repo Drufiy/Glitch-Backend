@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-"""
-Interactive diagnostic bot client - simulates real user interaction
-"""
 import requests
 import subprocess
 import json
@@ -76,7 +73,7 @@ def run_command(command: str) -> dict:
 
 def main():
     """Main interactive diagnostic session"""
-    print("🤖 Interactive Diagnostic Bot Client")
+    print("🤖 Glitch - AI Troubleshooting Assistant")
     print("=" * 50)
     print("Describe your technical issue and I'll help diagnose it!")
     print("Commands will be executed automatically when suggested.")
@@ -92,7 +89,7 @@ def main():
         print("   python run.py")
         sys.exit(1)
     
-    print("✅ Connected to diagnostic bot\n")
+    print("✅ Connected to Glitch\n")
     
     # Main interaction loop
     current_problem = None
