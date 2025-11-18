@@ -4,8 +4,11 @@ pydantic[email]
 python-jose[cryptography]
 passlib[bcrypt]
 python-multipart
-sqlalchemy
 python-dotenv
 google-genai
 requests
 Werkzeug
+supabase
+sentence-transformers
+numpy
+openai
