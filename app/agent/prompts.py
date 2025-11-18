@@ -94,7 +94,7 @@ wmic logicaldisk get size,freespace,caption  # Disk info (CMD)
 ### Memory
 ```powershell
 Get-CimInstance Win32_PhysicalMemory | Select Capacity  # RAM modules
-Get-Counter "\Memory\Available MBytes"       # Available memory
+Get-Counter r"\Memory\Available MBytes"      # Available memory
 wmic memorychip get capacity                 # Memory info (CMD)
 ```
 
