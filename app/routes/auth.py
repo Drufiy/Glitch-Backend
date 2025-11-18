@@ -1,11 +1,10 @@
 from datetime import datetime, timedelta
-from typing import Annotated
+from typing import Annotated, Dict
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy.orm import Session
 from jose import JWTError, jwt
-from ..database import get_db
-from ..models import User, Token, TokenData, UserResponse, LoginRequest, LoginResponse
+from ..database.supabase_auth import get_user_by_email, verify_user_credentials
+from ..models import Token, TokenData, UserResponse, LoginRequest, LoginResponse
 
 router = APIRouter()
 
@@ -26,8 +25,7 @@ def create_access_token(data: dict):
 
 async def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],
-    db: Session = Depends(get_db)
-) -> User:
+) -> Dict:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -41,8 +39,8 @@ async def get_current_user(
         token_data = TokenData(email=email)
     except JWTError:
         raise credentials_exception
-    
-    user = db.query(User).filter(User.email == token_data.email).first()
+
+    user = get_user_by_email(token_data.email)
     if user is None:
         raise credentials_exception
     return user
@@ -50,27 +48,36 @@ async def get_current_user(
 @router.post("/login", response_model=LoginResponse)
 async def login(
     login_data: LoginRequest,
-    db: Session = Depends(get_db)
 ):
-    user = db.query(User).filter(User.email == login_data.email).first()
-    if not user or not user.check_password(login_data.password):
+    ok = verify_user_credentials(login_data.email, login_data.password)
+    if not ok:
         return LoginResponse(
             success=False,
             message="Invalid email or password"
         )
 
-    token = create_access_token({"email": user.email})
+    user = get_user_by_email(login_data.email)
+    token = create_access_token({"email": user.get("email")})
     return LoginResponse(
         success=True,
         token=token,
         user={
-            "email": user.email,
-            "name": user.name
+            "email": user.get("email"),
+            "name": user.get("name")
         }
     )
 
+
+# NOTE: Public registration is disabled. Users should be created
+# manually via the `scripts/seed_users.py` script or directly in Supabase.
+
 @router.get("/me", response_model=UserResponse)
 async def read_users_me(
-    current_user: Annotated[User, Depends(get_current_user)]
+    current_user: Annotated[Dict, Depends(get_current_user)]
 ):
-    return current_user 
+    # Return only fields expected by UserResponse
+    return {
+        "id": current_user.get("id"),
+        "email": current_user.get("email"),
+        "name": current_user.get("name"),
+    }
