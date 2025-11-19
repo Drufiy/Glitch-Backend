@@ -26,6 +26,7 @@ app.add_middleware(
 # Toggle middleware
 @app.middleware("http")
 async def switch_middleware(request: Request, call_next):
+    print("Origin:", request.headers.get("origin"))
     switch_param = request.query_params.get("switch")
 
     if switch_param is not None:
