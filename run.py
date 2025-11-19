@@ -16,7 +16,8 @@ app.state.server_enabled = True
 # ✅ Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # frontend origin
+    allow_origins=["http://localhost:3000",
+    "tauri://localhost",],  # frontend origin
     allow_credentials=True,
     allow_methods=["*"],  # or restrict to ["GET", "POST"]
     allow_headers=["*"],  # or restrict if you know exact headers
