@@ -1,22 +1,25 @@
 #!/usr/bin/env python3
 """
-Main application runner
+Main application runner for Glitch Backend
 """
-from fastapi import FastAPI
+
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from app.routes.route import router as api_router
 from app.routes.auth import router as auth_router
 from app.routes.threads import router as threads_router
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi import Request
-from fastapi.responses import JSONResponse
 from os import environ
 
 app = FastAPI(title="Glitch API", version="1.0.0")
 
-# Initialize on/off switch state (True = ON, False = OFF)
+# Server switch state (ON by default)
 app.state.server_enabled = True
 
-# --- BEGIN MODIFICATION FOR GCP DEPLOYMENT ---
+
+# ============================================================
+# CORS CONFIGURATION FOR CLOUD RUN
+# ============================================================
 
 DEPLOYED_URL = environ.get("GCP_BACKEND_URL", "")
 
@@ -36,38 +39,57 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- END MODIFICATION ---
 
+# ============================================================
+# SERVER SWITCH MIDDLEWARE (with correct preflight behavior)
+# ============================================================
 
-# Toggle middleware
 @app.middleware("http")
 async def switch_middleware(request: Request, call_next):
-
-    # FIX: Handle OPTIONS manually, return 200
+    # Handle preflight immediately
     if request.method == "OPTIONS":
         return JSONResponse(status_code=200, content={"detail": "OK"})
 
+    # Handle switch control
     switch_param = request.query_params.get("switch")
-
     if switch_param is not None:
         value = switch_param.strip().lower()
+
         if value in {"true", "false"}:
             request.app.state.server_enabled = (value == "true")
-            return JSONResponse(
-                {"message": "server switch updated", "server_enabled": request.app.state.server_enabled}
-            )
-        return JSONResponse({"error": "invalid switch value; use true or false"}, status_code=400)
+            return JSONResponse({
+                "message": "server switch updated",
+                "server_enabled": request.app.state.server_enabled
+            })
 
+        return JSONResponse(
+            {"error": "invalid switch value; use true or false"},
+            status_code=400
+        )
+
+    # If server disabled → block all endpoints
     if not request.app.state.server_enabled:
-        return JSONResponse({"error": "server is currently disabled"}, status_code=503)
+        return JSONResponse(
+            {"error": "server is currently disabled"},
+            status_code=503
+        )
 
+    # Process request normally
     return await call_next(request)
 
 
-# Routes
+# ============================================================
+# ROUTES
+# ============================================================
+
 app.include_router(api_router)
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
 app.include_router(threads_router, tags=["threads"])
+
+
+# ============================================================
+# UVICORN ENTRYPOINT
+# ============================================================
 
 if __name__ == "__main__":
     import uvicorn
