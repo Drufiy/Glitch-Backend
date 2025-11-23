@@ -48,7 +48,11 @@ app.add_middleware(
 async def switch_middleware(request: Request, call_next):
     # Handle preflight immediately
     if request.method == "OPTIONS":
-        return JSONResponse(status_code=200, content={"detail": "OK"})
+        response = JSONResponse(status_code=200, content={"detail": "OK"})
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, DELETE, PUT, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+        return response
 
     # Handle switch control
     switch_param = request.query_params.get("switch")
