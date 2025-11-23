@@ -26,10 +26,10 @@ DEPLOYED_URL = environ.get("GCP_BACKEND_URL", "")
 
 # 2. Define the list of allowed origins.
 ALLOWED_ORIGINS = [
-    # Kept: Local development origin (e.g., Next.js dev server)
-    "http://localhost:3000",
-    # Kept: Tauri internal webview origin (essential for local testing/packaged app)
-    "tauri://localhost",
+    # Kept: Local development origin (e.g., Next.js dev server)
+    "http://localhost:3000",
+    # Kept: Tauri internal webview origin (essential for local testing/packaged app)
+    "tauri://localhost",
 ]
 
 # 3. Add the deployed HTTPS URL only if it exists (i.e., only when running on GCP)
