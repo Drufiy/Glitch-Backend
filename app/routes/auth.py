@@ -5,14 +5,16 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from ..database.supabase_auth import get_user_by_email, verify_user_credentials
 from ..models import Token, TokenData, UserResponse, LoginRequest, LoginResponse
+from ..config.config import JWT_SECRET # <--- FIXED: IMPORT SECRET FROM CONFIG
 
 router = APIRouter()
 
-# to get a string like this run:
-# openssl rand -hex 32
-SECRET_KEY = "as4234#&^*@d5as@$P4d8as_+@)7d87!*$#_as-+++87"
+# ----------------------------------------------------------
+# FIXED: The SECRET_KEY is now imported from the environment (via app/config/config.py)
+# ----------------------------------------------------------
+SECRET_KEY = JWT_SECRET 
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 1440  # 24 hours
+ACCESS_TOKEN_EXPIRE_MINUTES = 1440 # 24 hours
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
@@ -31,6 +33,10 @@ async def get_current_user(
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    # Ensure SECRET_KEY is available before decoding
+    if not SECRET_KEY:
+        raise credentials_exception
+        
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("email")
@@ -57,6 +63,10 @@ async def login(
         )
 
     user = get_user_by_email(login_data.email)
+    # Ensure the secret is available before creating the token
+    if not SECRET_KEY:
+        raise HTTPException(status_code=500, detail="Server configuration error: JWT Secret Missing")
+        
     token = create_access_token({"email": user.get("email")})
     return LoginResponse(
         success=True,
