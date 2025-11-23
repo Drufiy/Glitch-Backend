@@ -7,12 +7,9 @@ from app.routes.route import router as api_router
 from app.routes.auth import router as auth_router
 from app.routes.threads import router as threads_router
 from fastapi.middleware.cors import CORSMiddleware
-# Migration note: SQLAlchemy/SQLite removed in favor of Supabase.
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from os import environ 
-
-# Database table creation is now handled in Supabase via SQL schema.
+from os import environ
 
 app = FastAPI(title="Glitch API", version="1.0.0")
 
@@ -21,49 +18,48 @@ app.state.server_enabled = True
 
 # --- BEGIN MODIFICATION FOR GCP DEPLOYMENT ---
 
-# 1. Fetch the deployed HTTPS URL from a GCP-injected environment variable.
+# 1. Fetch deployed HTTPS URL from environment
 DEPLOYED_URL = environ.get("GCP_BACKEND_URL", "")
 
-# 2. Define the list of allowed origins.
+# 2. Allowed origins
 ALLOWED_ORIGINS = [
-    # Kept: Local development origin (e.g., Next.js dev server)
     "http://localhost:3000",
-    # Kept: Tauri internal webview origin (essential for local testing/packaged app)
     "tauri://localhost",
 ]
 
-# 3. Add the deployed HTTPS URL only if it exists (i.e., only when running on GCP)
+# 3. Add deployed URL if present
 if DEPLOYED_URL:
-    ALLOWED_ORIGINS.append(DEPLOYED_URL)
+    ALLOWED_ORIGINS.append(DEPLOYED_URL)
 
-# ✅ Enable CORS
+# Enable CORS
 app.add_middleware(
-    CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS, 
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # --- END MODIFICATION ---
 
+
 # Toggle middleware
 @app.middleware("http")
 async def switch_middleware(request: Request, call_next):
-    
-    # --- CRITICAL FIX: Allow OPTIONS (CORS pre-flight) requests to proceed ---
-    # This prevents the "failed to fetch" error caused by the middleware blocking the pre-flight check.
+
+    # Allow OPTIONS requests for CORS pre-flight
     if request.method == "OPTIONS":
         return await call_next(request)
-    # -----------------------------------------------------------------------
-    
+
     switch_param = request.query_params.get("switch")
 
     if switch_param is not None:
         value = switch_param.strip().lower()
         if value in {"true", "false"}:
             app.state.server_enabled = (value == "true")
-            return JSONResponse({"message": "server switch updated", "server_enabled": app.state.server_enabled})
+            return JSONResponse(
+                {"message": "server switch updated", "server_enabled": app.state.server_enabled}
+            )
         return JSONResponse({"error": "invalid switch value; use true or false"}, status_code=400)
 
     if not app.state.server_enabled:
@@ -71,6 +67,7 @@ async def switch_middleware(request: Request, call_next):
 
     response = await call_next(request)
     return response
+
 
 # Routes
 app.include_router(api_router)
