@@ -54,3 +54,21 @@ async def switch_middleware(request: Request, call_next):
         if value in {"true", "false"}:
             request.app.state.server_enabled = (value == "true")
             return JSONResponse(
+                {"message": "server switch updated", "server_enabled": request.app.state.server_enabled}
+            )
+        return JSONResponse({"error": "invalid switch value; use true or false"}, status_code=400)
+
+    if not request.app.state.server_enabled:
+        return JSONResponse({"error": "server is currently disabled"}, status_code=503)
+
+    return await call_next(request)
+
+
+# Routes
+app.include_router(api_router)
+app.include_router(auth_router, prefix="/auth", tags=["auth"])
+app.include_router(threads_router, tags=["threads"])
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8080)
