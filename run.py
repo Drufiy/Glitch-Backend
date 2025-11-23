@@ -18,20 +18,16 @@ app.state.server_enabled = True
 
 # --- BEGIN MODIFICATION FOR GCP DEPLOYMENT ---
 
-# 1. Fetch deployed HTTPS URL from environment
 DEPLOYED_URL = environ.get("GCP_BACKEND_URL", "")
 
-# 2. Allowed origins
 ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "tauri://localhost",
 ]
 
-# 3. Add deployed URL if present
 if DEPLOYED_URL:
     ALLOWED_ORIGINS.append(DEPLOYED_URL)
 
-# Enable CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
@@ -47,33 +43,14 @@ app.add_middleware(
 @app.middleware("http")
 async def switch_middleware(request: Request, call_next):
 
-    # Allow OPTIONS requests for CORS pre-flight
+    # FIX: Handle OPTIONS manually, return 200
     if request.method == "OPTIONS":
-        return await call_next(request)
+        return JSONResponse(status_code=200, content={"detail": "OK"})
 
     switch_param = request.query_params.get("switch")
 
     if switch_param is not None:
         value = switch_param.strip().lower()
         if value in {"true", "false"}:
-            app.state.server_enabled = (value == "true")
+            request.app.state.server_enabled = (value == "true")
             return JSONResponse(
-                {"message": "server switch updated", "server_enabled": app.state.server_enabled}
-            )
-        return JSONResponse({"error": "invalid switch value; use true or false"}, status_code=400)
-
-    if not app.state.server_enabled:
-        return JSONResponse({"error": "server is currently disabled"}, status_code=503)
-
-    response = await call_next(request)
-    return response
-
-
-# Routes
-app.include_router(api_router)
-app.include_router(auth_router, prefix="/auth", tags=["auth"])
-app.include_router(threads_router, tags=["threads"])
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8080)
