@@ -43,9 +43,11 @@ def verify_user_credentials(email: str, password: str) -> bool:
     user = get_user_by_email(email)
     if not user:
         return False
+
     stored_hash = user.get("password_hash")
     if not stored_hash:
         return False
+
     try:
         return check_password_hash(stored_hash, password)
     except Exception:
