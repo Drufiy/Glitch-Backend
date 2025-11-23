@@ -64,7 +64,7 @@ async def switch_middleware(request: Request, call_next):
         return JSONResponse({"error": "invalid switch value; use true or false"}, status_code=400)
 
     if not app.state.server_enabled:
-    return JSONResponse({"error": "server is currently disabled"}, status_code=503)
+        return JSONResponse({"error": "server is currently disabled"}, status_code=503)
 
     response = await call_next(request)
     return response
