@@ -26,6 +26,7 @@ DEPLOYED_URL = environ.get("GCP_BACKEND_URL", "")
 ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "tauri://localhost",
+    "asset://localhost",
 ]
 
 if DEPLOYED_URL:
