@@ -58,9 +58,9 @@ async def get_current_user(
 async def login(login_data: LoginRequest):
     ok = verify_user_credentials(login_data.email, login_data.password)
     if not ok:
-        return LoginResponse(
-            success=False,
-            message="Invalid email or password"
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail = "Invalid email or password"
         )
 
     user = get_user_by_email(login_data.email)
