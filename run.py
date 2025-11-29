@@ -34,7 +34,7 @@ if DEPLOYED_URL:
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -49,7 +49,7 @@ app.add_middleware(
 async def switch_middleware(request: Request, call_next):
     # Handle preflight immediately
     if request.method == "OPTIONS":
-        return await call_next(request)
+        return JSONResponse(status_code=200, content={"message": "OK"})
 
     # Handle switch control
     switch_param = request.query_params.get("switch")
