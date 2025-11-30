@@ -96,23 +96,57 @@ class ThreadService:
             print(f"[ERROR] Failed to list threads: {e}")
             return []
     
+
     @staticmethod
-    def delete_thread(thread_id: str) -> bool:
-        """Delete a thread and all its messages"""
-        if not is_supabase_available():
-            print(f"[THREAD] Deleted thread (in-memory): {thread_id}")
-            return True
-        
-        try:
-            # Delete messages first (cascade should handle this, but being explicit)
-            supabase.table("messages").delete().eq("thread_id", thread_id).execute()
-            # Delete thread
-            supabase.table("threads").delete().eq("id", thread_id).execute()
-            print(f"[THREAD] Deleted thread: {thread_id}")
-            return True
-        except Exception as e:
-            print(f"[ERROR] Failed to delete thread: {e}")
+def delete_thread(thread_id: str) -> bool:
+    """Delete a thread and all its messages."""
+    if not is_supabase_available():
+        print(f"[THREAD] Deleted thread (in-memory): {thread_id}")
+        return True
+
+    try:
+        # First verify thread exists & get user_id (needed for RLS)
+        thread_result = supabase.table("threads") \
+            .select("user_id") \
+            .eq("id", thread_id) \
+            .execute()
+
+        if not thread_result.data:
+            print(f"[ERROR] Thread not found in Supabase: {thread_id}")
             return False
+
+        user_id = thread_result.data[0]["user_id"]
+
+        # Delete messages for this thread (must include user_id for RLS)
+        supabase.table("messages") \
+            .delete() \
+            .eq("thread_id", thread_id) \
+            .eq("user_id", user_id) \
+            .execute()
+
+        # Delete embeddings
+        supabase.table("message_embeddings") \
+            .delete() \
+            .eq("thread_id", thread_id) \
+            .execute()
+
+        # Delete the thread (must include user_id to satisfy RLS)
+        delete_result = supabase.table("threads") \
+            .delete() \
+            .eq("id", thread_id) \
+            .eq("user_id", user_id) \
+            .execute()
+
+        if delete_result.error:
+            print(f"[ERROR] Supabase delete failed: {delete_result.error}")
+            return False
+
+        print(f"[THREAD] Deleted thread permanently: {thread_id}")
+        return True
+
+    except Exception as e:
+        print(f"[ERROR] Failed to delete thread: {e}")
+        return False
     
     @staticmethod
     def add_message(
