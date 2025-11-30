@@ -97,7 +97,7 @@ class ThreadService:
             return []
     
 
-    @staticmethod
+@staticmethod
 def delete_thread(thread_id: str) -> bool:
     """Delete a thread and all its messages."""
     if not is_supabase_available():
